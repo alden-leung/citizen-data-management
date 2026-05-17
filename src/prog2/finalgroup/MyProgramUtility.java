@@ -259,4 +259,10 @@ public class MyProgramUtility {
                         )
                 ));
     }
+    public static List<Citizen> getSortedCitizens(List<Citizen> citizens) {
+        if (citizens == null) return new ArrayList<>();
+        return citizens.stream()
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }

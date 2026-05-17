@@ -197,7 +197,8 @@ public class Gui extends JFrame {
     }
 
     private void loadData() {
-        citizens = MyProgramUtility.loadCitizens("res/data.csv");
+        List<Citizen> rawData = MyProgramUtility.loadCitizens("res/data.csv");
+        citizens = MyProgramUtility.getSortedCitizens(rawData);
 
         if (citizens.isEmpty()) {
             UIManager.put("OptionPane.background", COLOR_BG_PANEL);
