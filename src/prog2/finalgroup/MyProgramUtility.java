@@ -212,4 +212,51 @@ public class MyProgramUtility {
 
     } // end of getPopulationPerDistrict
 
+    // Calculates the mean age of citizens living in each specific district.
+    public static Map<Integer, Double> getAverageAgePerDistrict(List<Citizen> citizens) {
+        return citizens.stream()
+                .collect(Collectors.groupingBy(
+                        Citizen::getDistrict,
+                        Collectors.averagingInt(Citizen::getAge)
+                ));
+    }
+
+    // Categorizes the population into Minors, Adults, and Seniors instead of just a raw count.
+    public static Map<String, Long> getAgeDemographics(List<Citizen> citizens) {
+        return citizens.stream()
+                .collect(Collectors.groupingBy(c -> {
+                    if (c.getAge() < 18) return "Minors (0-17)";
+                    else if (c.getAge() >= 60) return "Seniors (60+)";
+                    else return "Adults (18-59)";
+                }, Collectors.counting()));
+    }
+
+    // Reuses your existing district population method to find the single district with the highest count.
+    public static Map.Entry<Integer, Long> getMostPopulousDistrict(List<Citizen> citizens) {
+        Map<Integer, Long> popPerDistrict = getPopulationPerDistrict(citizens);
+
+        return popPerDistrict.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElse(null);
+    }
+
+    // Returns the percentage of the population that are official residents, useful for a pie chart in the GUI.
+    public static double getResidentPercentage(List<Citizen> citizens) {
+        if (citizens.isEmpty()) return 0.0;
+
+        long residents = countResidents(citizens);
+        return ((double) residents / citizens.size()) * 100.0;
+    }
+
+    // A complex stream that groups by district first, and then breaks down the male/female count within that district.
+    public static Map<Integer, Map<Character, Long>> getGenderDistributionPerDistrict(List<Citizen> citizens) {
+        return citizens.stream()
+                .collect(Collectors.groupingBy(
+                        Citizen::getDistrict,
+                        Collectors.groupingBy(
+                                Citizen::getGender,
+                                Collectors.counting()
+                        )
+                ));
+    }
 }
