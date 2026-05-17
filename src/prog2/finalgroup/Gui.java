@@ -25,13 +25,13 @@ public class Gui extends JFrame {
     private JLabel lblOldest;
     private JLabel lblStatus;
 
-    private final Color COLOR_BG_MAIN      = new Color(187, 188, 195);    // Soft professional light gray
-    private final Color COLOR_BG_PANEL     = new Color(204, 204, 204);    // Clean white for panels/tables
-    private final Color COLOR_TEXT_PRIMARY = new Color(0, 0, 0);       // Dark gray text for readability
-    private final Color COLOR_TEXT_MUTED   = new Color(31, 50, 94);    // Muted gray for secondary text
-    private final Color COLOR_ACCENT       = new Color(99, 99, 99);    // Subtle borders and header backgrounds
-    private final Color COLOR_BTN_HOVER    = new Color(114, 143, 66);    // Slightly darker gray for button hover
-    private final Color COLOR_SELECTION    = new Color(57, 53, 54);    // Very soft blue-gray for table selection
+    private final Color COLOR_BG_MAIN      = new Color(187, 188, 195);    
+    private final Color COLOR_BG_PANEL     = new Color(204, 204, 204);    
+    private final Color COLOR_TEXT_PRIMARY = new Color(0, 0, 0);      
+    private final Color COLOR_TEXT_MUTED   = new Color(31, 50, 94);    
+    private final Color COLOR_ACCENT       = new Color(99, 99, 99);   
+    private final Color COLOR_BTN_HOVER    = new Color(114, 143, 66);    
+    private final Color COLOR_SELECTION    = new Color(107, 126, 103);    
 
     private final Font FONT_TITLE   = new Font("Segoe UI", Font.BOLD, 20);
     private final Font FONT_HEADING = new Font("Segoe UI", Font.BOLD, 14);
