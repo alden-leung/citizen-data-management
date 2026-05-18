@@ -7,6 +7,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.ArrayList;
+import javax.swing.SwingWorker;
+
 
 public class Gui extends JFrame {
 
@@ -28,9 +30,9 @@ public class Gui extends JFrame {
     private final Color COLOR_BG_MAIN      = new Color(187, 188, 195);    
     private final Color COLOR_BG_PANEL     = new Color(204, 204, 204);    
     private final Color COLOR_TEXT_PRIMARY = new Color(0, 0, 0);      
-    private final Color COLOR_TEXT_MUTED   = new Color(31, 50, 94);    
+    private final Color COLOR_TEXT_MUTED   = new Color(31, 50, 94);   
     private final Color COLOR_ACCENT       = new Color(99, 99, 99);   
-    private final Color COLOR_BTN_HOVER    = new Color(114, 143, 66);    
+    private final Color COLOR_BTN_HOVER    = new Color(135, 135, 135);  
     private final Color COLOR_SELECTION    = new Color(107, 126, 103);    
 
     private final Font FONT_TITLE   = new Font("Segoe UI", Font.BOLD, 20);
@@ -38,7 +40,7 @@ public class Gui extends JFrame {
     private final Font FONT_BODY    = new Font("Segoe UI", Font.PLAIN, 13);
 
     public Gui() {
-        setTitle("Citizen Registry - CS 122 Final Project 02");
+        setTitle("CITIZEN REGISTRY - CS 122 Final Project 02");
         setSize(950, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -60,7 +62,7 @@ public class Gui extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         panel.setBackground(COLOR_BG_MAIN);
 
-        JLabel title = new JLabel("Citizen Registry");
+        JLabel title = new JLabel("CITIZEN REGISTRY");
         title.setFont(FONT_TITLE);
         title.setForeground(COLOR_TEXT_PRIMARY);
 
@@ -70,7 +72,7 @@ public class Gui extends JFrame {
         btnLoad.setForeground(COLOR_TEXT_PRIMARY);
         btnLoad.setFocusPainted(false);
         btnLoad.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1),
+                BorderFactory.createLineBorder(new Color(80, 80, 80), 2),
                 BorderFactory.createEmptyBorder(6, 12, 6, 12)
         ));
 
@@ -82,7 +84,52 @@ public class Gui extends JFrame {
 
         btnLoad.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                loadData();
+                btnLoad.setEnabled(false);
+
+
+                String[] frames = { "|", "/", "-", "\\" };
+
+                Timer spinner = new Timer(120, null);
+                final int[] tick = { 0 };
+
+                spinner.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent evt) {
+                        btnLoad.setText("Loading " + frames[tick[0] % frames.length]);
+                        tick[0]++;
+                    }
+                });
+                spinner.start();
+
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        citizens = MyProgramUtility.loadCitizens("res/data.csv");
+                        Thread.sleep(800);
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        spinner.stop();
+                        btnLoad.setText("Load Data");
+                        btnLoad.setEnabled(true);
+
+                        if (citizens.isEmpty()) {
+                            UIManager.put("OptionPane.background", COLOR_BG_PANEL);
+                            UIManager.put("Panel.background", COLOR_BG_PANEL);
+                            UIManager.put("Label.foreground", COLOR_TEXT_PRIMARY);
+                            JOptionPane.showMessageDialog(Gui.this,
+                                    "No data loaded. Check that res/data.csv exists.",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        populateTable();
+                        updateStats();
+                        lblStatus.setText("Loaded " + citizens.size() + " citizens.");
+                    }
+                };
+                worker.execute();
             }
         });
 
@@ -196,9 +243,18 @@ public class Gui extends JFrame {
         return panel;
     }
 
+    private void highlightCitizen(Citizen target) {
+        for (int i = 0; i < citizens.size(); i++) {
+            if (citizens.get(i) == target) {
+                citizenTable.setRowSelectionInterval(i, i);
+                citizenTable.scrollRectToVisible(citizenTable.getCellRect(i, 0, true));
+                return;
+            }
+        }
+    }
+
     private void loadData() {
-        List<Citizen> rawData = MyProgramUtility.loadCitizens("res/data.csv");
-        citizens = MyProgramUtility.getSortedCitizens(rawData);
+        citizens = MyProgramUtility.loadCitizens("res/data.csv");
 
         if (citizens.isEmpty()) {
             UIManager.put("OptionPane.background", COLOR_BG_PANEL);
@@ -241,9 +297,30 @@ public class Gui extends JFrame {
         lblResidents.setText("Residents: "     + CitizenStatistics.countResidents(citizens));
         lblSeniors  .setText("Seniors (60+): " + CitizenStatistics.countSeniorCitizens(citizens));
         lblAvgAge   .setText("Avg Age: "       + String.format("%.1f", CitizenStatistics.getAverageAge(citizens)));
-        lblYoungest .setText("Youngest: "      + (youngest != null ? youngest.getFullName() + " (" + youngest.getAge() + ")" : "-"));
-        lblOldest   .setText("Oldest: "        + (oldest   != null ? oldest.getFullName()   + " (" + oldest.getAge()   + ")" : "-"));
-    }
+        if (youngest != null) {
+            lblYoungest.setText("<html><u>Youngest: " + youngest.getFullName() + " (" + youngest.getAge() + ")</u></html>");
+            lblYoungest.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final Citizen finalYoungest = youngest;
+            for (MouseListener ml : lblYoungest.getMouseListeners()) lblYoungest.removeMouseListener(ml);
+            lblYoungest.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) { highlightCitizen(finalYoungest); }
+            });
+        } else {
+            lblYoungest.setText("Youngest: -");
+        }
+
+        if (oldest != null) {
+            lblOldest.setText("<html><u>Oldest: " + oldest.getFullName() + " (" + oldest.getAge() + ")</u></html>");
+            lblOldest.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final Citizen finalOldest = oldest;
+            for (MouseListener ml : lblOldest.getMouseListeners()) lblOldest.removeMouseListener(ml);
+            lblOldest.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) { highlightCitizen(finalOldest); }
+            });
+        } else {
+            lblOldest.setText("Oldest: -");
+        }
+       }
 
     private void showSelectedCitizenDetails() {
         int row = citizenTable.getSelectedRow();
